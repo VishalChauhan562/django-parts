@@ -7,6 +7,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 import io
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Avg
 
 
 
@@ -28,41 +29,39 @@ definitions = {
     "december": None
 }
 
+#  FUnctions handeling views
 def index(request):
     try:
         month_list = list(definitions.keys())
-        month = Month.objects.all() 
+        month = Month.objects.all().order_by("name")  # use -name for reverse order
+        month_count = month.count()
+        month_position_avg = month.aggregate(Avg("position")) 
         serialized_months = MonthSerializer(month,many=True)
-        names = [item['name'].lower() for item in serialized_months.data]
         print("==========>",serialized_months.data)
         return render(request,"challenges/index.html",{
-                "month_list" : names
+                "month_list" : serialized_months.data,
+                "month_count" : month_count,
+                "avg" : month_position_avg
             })
-    except:
+    except Exception as e:
+        print("Error in index===>",e)
         raise Http404()  
 
-def monthly_challenge_name(request,month):
+def monthly_challenge_name(request,id):
     try:
-        month_obj = Month.objects.get(name=month.capitalize())
+        month_obj = Month.objects.get(pk=id)
         serialized_month = MonthSerializer(month_obj)
         python_data =  serialized_month.data
-        print("====>",serialized_month.data['idea'])
+        # print("====>",serialized_month.data['idea'])
         return render(request,"challenges/challenge.html",{
-            "month_text" : python_data['idea'],
-            "month" : month
+            "month_data" : python_data
         })
-    except:
-        raise Http404()  
+    except Exception as e:
+        print("Error in index===>",e)
+        raise Http404()    
 
-def monthly_challenge_number(request,month):
-    try:
-        month_keys = list(definitions.keys())
-        month_came = month_keys[month - 1]
-        redirect_path = reverse('month-challenge',args=[month_came])
-        return HttpResponseRedirect(redirect_path)
-    except:
-        raise Http404()  
 
+# Function handeling APIS
 
 def month_detail(request,pk):
     month = Month.objects.get(position=pk)   

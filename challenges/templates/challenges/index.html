@@ -9,10 +9,11 @@
 {% endblock %}
 
 {% block content%}
-{% include "challenges/includes/header.html" with active_page="List" %}  
+{% include "challenges/includes/header.html" with active_page="List" %}
+    <div>Total Months: {{month_count}} Positional Avg: {{avg.position__avg}}<div>  
     <ul>
         {% for month in month_list%}
-        <li><a href={% url "month-challenge" month%}>{{month | title}}</a></li>
+        <li><a href={% url "month-challenge" month.id%}>{{month.name | title}}</a></li>
         {% endfor %}
     </ul>
 {% endblock %}
